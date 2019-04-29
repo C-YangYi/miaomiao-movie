@@ -1,11 +1,43 @@
 <template>
- <div>
-     正在热映
- </div>
+  <div class="movie_body">
+    <ul>
+      <li v-for="item of movieList" :key="item.id">
+        <div class="pic_show">
+          <img :src="item.img|setHW('128.180')" alt>
+        </div>
+        <div class="info_list">
+          <h2>{{item.nm}} <img v-if="item.version" src="@/assets/maxs.png"> </h2>
+          <p v-if="item.sc!==0&&item.globalReleased">观众评 <span class="grade">{{item.sc}}</span></p>
+          <p v-else-if="!item.globalReleased"><span class="person">{{item.wish}}</span> 人想看</p>
+          <p v-else>暂无评分</p>
+          <p>主演：{{item.star}}</p>
+          <p>{{item.showInfo}}</p>
+        </div>
+        <div :class="item.globalReleased?'btn_mall':'btn_pre'">{{item.globalReleased?'购票':'预售'}}</div>
+      </li>
+    </ul>
+  </div>
 </template>
 
 <script>
-export default {};
+export default {
+  name: "NowPlaying",
+  data() {
+    return {
+      movieList: ""
+    };
+  },
+  mounted() {
+    this.axios
+      .get("/api/movieOninfoList?cityId=10")
+      .then(result => {
+        this.movieList = result.data.data.movieList;
+        console.log(this.movieList);
+        
+      })
+      .catch(err => {});
+  }
+};
 </script>
 
 <style scoped>
@@ -30,11 +62,17 @@ export default {};
 }
 .movie_body .pic_show img {
   width: 100%;
+  height: 100%;
 }
 .movie_body .info_list {
   margin-left: 10px;
   flex: 1;
   position: relative;
+}
+.movie_body .info_list .person{
+    color: #faaf00;
+    font-size: 15px;
+    font-weight: 600
 }
 .movie_body .info_list h2 {
   font-size: 17px;
