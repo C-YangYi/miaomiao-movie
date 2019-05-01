@@ -1,43 +1,54 @@
 <template>
-  <div class="movie_body">
-    <ul>
-      <li v-for="item of comingList" :key="item.id">
-        <div class="pic_show">
-          <img :src="item.img|setHW('128.180')" alt>
-        </div>
-        <div class="info_list">
-          <h2>
-            {{item.nm}}
-            <img v-if="item.version" src="@/assets/maxs.png">
-          </h2>
-          <p>
-            <span class="person">{{item.wish}}</span> 人想看
-          </p>
-          <p>主演：{{item.star}}</p>
-          <p>{{item.rt+' 上映'}}</p>
-        </div>
-        <div class="btn_pre">预售</div>
-      </li>
-    </ul>
+  <div class="movie_body" ref="movie_body">
+    <Loading v-if="isLoading"/>
+    <Scroller v-else>
+      <ul>
+        <li v-for="item of comingList" :key="item.id">
+          <div class="pic_show">
+            <img :src="item.img|setHW('128.180')" alt>
+          </div>
+          <div class="info_list">
+            <h2>
+              {{item.nm}}
+              <img v-if="item.version" src="@/assets/maxs.png">
+            </h2>
+            <p>
+              <span class="person">{{item.wish}}</span> 人想看
+            </p>
+            <p>主演：{{item.star}}</p>
+            <p>{{item.rt+' 上映'}}</p>
+          </div>
+          <div class="btn_pre">预售</div>
+        </li>
+      </ul>
+    </Scroller>
   </div>
 </template>
 
 <script>
+import { truncate } from 'fs';
 export default {
   name: "ComingSoon",
   data() {
     return {
-      comingList: []
+      comingList: [],
+      isLoading: true,
+      prevCityId: -1
     };
   },
-  mounted() {
+  activated() {
+    var cityId = this.$store.state.city.id
+    if(this.prevCityId === cityId){return}
+    this.isLoading = true
     this.axios
-      .get("/api/movieComingList?cityId=10")
+      .get("/api/movieComingList?cityId="+cityId)
       .then(result => {
         var msg = result.data.msg;
         if (msg === "ok") {
           this.comingList = result.data.data.comingList;
           console.log(this.comingList);
+          this.isLoading = false;
+          this.prevCityId = cityId
         }
       })
       .catch(err => {
@@ -51,6 +62,9 @@ export default {
 #content .movie_body {
   flex: 1;
   overflow: auto;
+}
+.movie_body::-webkit-scrollbar {
+  display: none;
 }
 .movie_body ul {
   margin: 0 12px;
@@ -93,10 +107,10 @@ export default {
   white-space: nowrap;
   text-overflow: ellipsis;
 }
-.movie_body .info_list .person{
-    color: #faaf00;
-    font-size: 15px;
-    font-weight: 600
+.movie_body .info_list .person {
+  color: #faaf00;
+  font-size: 15px;
+  font-weight: 600;
 }
 .movie_body .info_list .grade {
   font-weight: 700;

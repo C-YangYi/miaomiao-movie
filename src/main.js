@@ -3,10 +3,13 @@ import App from './App.vue'
 import router from './routes'
 import store from './stores'
 import axios from  'axios'
+import Scroller from '@/components/Scroller'
+import Loading from '@/components/Loading'
 
 Vue.prototype.axios = axios
 Vue.config.productionTip = false
-
+Vue.component('Scroller',Scroller)
+Vue.component('Loading',Loading)
 Vue.filter('setHW',(url,arg) => {
   return url.replace(/w\.h/,arg)
 })

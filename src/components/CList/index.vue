@@ -1,5 +1,7 @@
 <template>
   <div class="cinema_body">
+    <Loading v-if="isLoading" />
+    <Scroller v-else>
     <ul>
       <li v-for="item of cinemaList" :key="item.id">
         <div>
@@ -23,6 +25,7 @@
         <div class="discount-block" v-if="item.promotion.cardPromotionTag"><img src="@/assets/card.png" alt="">{{item.promotion.cardPromotionTag}}</div>
       </li>
     </ul>
+    </Scroller>
   </div>
 </template>
 
@@ -31,7 +34,9 @@ export default {
   name: "Clist",
   data() {
     return {
-      cinemaList: []
+      cinemaList: [],
+      isLoading:true,
+      prevCityId:-1
     };
   },
   filters: {
@@ -68,15 +73,20 @@ export default {
       }
     }
   },
-  mounted() {
+  activated() {
+    var cityId = this.$store.state.city.id
+    if(this.prevCityId === cityId){return}
+    this.isLoading = true
     this.axios
-      .get("/api/cinemaList?cityId=10")
+      .get("/api/cinemaList?cityId="+cityId)
       .then(result => {
         var msg = result.data.msg;
         console.log(result);
 
         if (msg === "ok") {
           this.cinemaList = result.data.data.cinemas;
+          this.isLoading = false
+          this.prevCityId = cityId
         }
       })
       .catch(err => {
