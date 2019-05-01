@@ -1,20 +1,25 @@
 <template>
   <div class="city_body">
     <div class="city_list">
-      <div class="city_hot">
-        <h2>热门城市</h2>
-        <ul class="clearfix">
-          <li v-for="hotCity of hotCityList" :key="hotCity.id">{{hotCity.nm}}</li>
-        </ul>
-      </div>
-      <div class="city_sort" ref="city_sort">
-        <div v-for="city of cityList" :key="city.index">
-          <h2>{{city.index}}</h2>
-          <ul>
-            <li v-for="item of city.list" :key="item.id">{{item.nm}}</li>
-          </ul>
+      <Loading v-if="isLoading"/>
+      <Scroller v-else ref="city_list">
+        <div>
+          <div class="city_hot">
+            <h2>热门城市</h2>
+            <ul class="clearfix">
+              <li v-for="hotCity of hotCityList" :key="hotCity.id" @tap="handleToCity(hotCity)">{{hotCity.nm}}</li>
+            </ul>
+          </div>
+          <div class="city_sort" ref="city_sort">
+            <div v-for="city of cityList" :key="city.index">
+              <h2>{{city.index}}</h2>
+              <ul>
+                <li v-for="item of city.list" :key="item.id" @tap="handleToCity(item)">{{item.nm}}</li>
+              </ul>
+            </div>
+          </div>
         </div>
-      </div>
+      </Scroller>
     </div>
     <div class="city_index">
       <ul>
@@ -30,23 +35,38 @@
 
 <script>
 export default {
-  name: "city",
+  name: "City",
   data() {
     return {
       cityList: [],
-      hotCityList: []
+      hotCityList: [],
+      isLoading: true
     };
   },
   mounted() {
-    this.axios.get("/api/cityList").then(result => {
-      var msg = result.data.msg;
-      if (msg === "ok") {
-        var cities = result.data.data.cities;
-        var { cityList, hotCityList } = this.formatCityList(cities);
-        this.cityList = cityList;
-        this.hotCityList = hotCityList;
-      }
-    });
+    var cityList = window.localStorage.getItem("cityList");
+    var hotCityList = window.localStorage.getItem("hotCityList");
+    if (cityList && hotCityList) {
+      this.cityList = JSON.parse(cityList);
+      this.hotCityList = JSON.parse(hotCityList);
+      this.isLoading = false;
+    } else {
+      this.axios.get("/api/cityList").then(result => {
+        var msg = result.data.msg;
+        if (msg === "ok") {
+          var cities = result.data.data.cities;
+          var { cityList, hotCityList } = this.formatCityList(cities);
+          this.cityList = cityList;
+          this.hotCityList = hotCityList;
+          this.isLoading = false;
+          window.localStorage.setItem("cityList", JSON.stringify(cityList));
+          window.localStorage.setItem(
+            "hotCityList",
+            JSON.stringify(hotCityList)
+          );
+        }
+      });
+    }
   },
   methods: {
     formatCityList(cities) {
@@ -90,7 +110,16 @@ export default {
     },
     handleToIndex(i) {
       var h2 = this.$refs.city_sort.getElementsByTagName("h2");
-      this.$refs.city_sort.parentNode.scrollTop = h2[i].offsetTop;
+      // this.$refs.city_sort.parentNode.scrollTop = h2[i].offsetTop;
+      this.$refs.city_list.toScrollTop(-h2[i].offsetTop);
+    },
+    handleToCity(item){
+      var nm = item.nm
+      var id = item.id
+      this.$store.commit('city/CITY_INFO',{nm,id})
+      window.localStorage.setItem('cityNm',nm)
+      window.localStorage.setItem('cityId',id)
+      this.$router.push('/movie/nowPlaying')
     }
   }
 };
@@ -108,7 +137,7 @@ export default {
 .city_body .city_list {
   flex: 1;
   overflow: auto;
-  background: #fff5f0;
+  background: #f5f5f5;
 }
 .city_body .city_list::-webkit-scrollbar {
   background-color: transparent;
@@ -121,7 +150,7 @@ export default {
   padding-left: 15px;
   line-height: 30px;
   font-size: 14px;
-  background: #f0f0f0;
+  background: #ebebeb;
   font-weight: normal;
 }
 .city_body .city_hot ul li {
@@ -145,7 +174,7 @@ export default {
   padding-left: 15px;
   line-height: 30px;
   font-size: 14px;
-  background: #f0f0f0;
+  background: #ebebeb;
   font-weight: normal;
 }
 .city_body .city_sort ul {
@@ -153,8 +182,11 @@ export default {
   margin-top: 10px;
 }
 .city_body .city_sort ul li {
-  line-height: 30px;
-  line-height: 30px;
+  line-height: 40px;
+  width: 95%;
+  background: #f5f5f5;
+  border-bottom: 1px solid #c8c7cc;
+  font-size: 14px;
 }
 .city_body .city_index {
   width: 20px;

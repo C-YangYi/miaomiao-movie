@@ -29,8 +29,9 @@
 </template>
 
 <script>
+import BScroll from 'better-scroll'
 export default {
-  name: "search",
+  name: "Search",
   data() {
     return {
       searchKey: "",
@@ -723,9 +724,10 @@ export default {
   },
   watch: {
     searchKey(newKey) {
+      var cityId = this.$store.state.city.id
       this.cancelRequest();
       this.axios
-        .get("/api/searchList?cityId=10&kw=" + this.pinyin(newKey), {
+        .get("/api/searchList?cityId="+cityId+"&kw=" + this.pinyin(newKey), {
           cancelToken: new this.axios.CancelToken(c => {
             this.source = c;
           })
@@ -755,6 +757,9 @@ export default {
 #content .search_body {
   flex: 1;
   overflow: auto;
+}
+.search_body::-webkit-scrollbar {
+  display: none;
 }
 .search_body .search_input {
   padding: 8px 10px;
